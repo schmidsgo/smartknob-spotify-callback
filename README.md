@@ -1,4 +1,4 @@
-# smartknob-callback
+# smartknob-spotify-callback
 
 Static https redirect target for the SmartKnob Spotify login.
 
@@ -14,4 +14,4 @@ here, and this page sends the browser straight back to the knob.
   no third-party resources and its inline script is pinned by a CSP hash.
 
 Redirect URI to register in the Spotify developer dashboard:
-`https://schmidsgo.github.io/smartknob-callback/`
+`https://schmidsgo.github.io/smartknob-spotify-callback/`
