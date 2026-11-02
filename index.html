@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-i6m4GZzQYotXnxTlqGslCCiZIxtWPA+9BfmRATCP07g='; style-src 'unsafe-inline'">
+  <title>SmartKnob Spotify callback</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; display: flex; min-height: 100vh; margin: 0; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+    main { max-width: 32rem; text-align: center; }
+    code { color: #80ff50; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SmartKnob</h1>
+    <p id="msg">Returning to your SmartKnob...</p>
+  </main>
+  <script>
+(function () {
+  // Spotify redirects here (https is required for non-loopback redirect URIs).
+  // The knob's setup page put "<random>~<knob host>" into the OAuth state,
+  // so we send the browser back to that knob. Only hosts on the local network
+  // are allowed, so a crafted link can never forward the code to the internet.
+  var msg = document.getElementById('msg');
+  var params = new URLSearchParams(window.location.search);
+  var state = params.get('state') || '';
+  var host = state.slice(state.lastIndexOf('~') + 1);
+
+  function isLocalHost(h) {
+    var m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(:\d{1,5})?$/.exec(h);
+    if (m) {
+      var a = +m[1], b = +m[2];
+      if ([m[1], m[2], m[3], m[4]].some(function (o) { return +o > 255; })) return false;
+      return a === 10 || a === 127 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+    }
+    return /^localhost(:\d{1,5})?$/.test(h) || /^[a-z0-9-]+\.local(:\d{1,5})?$/i.test(h);
+  }
+
+  if (state.indexOf('~') < 0 || !isLocalHost(host)) {
+    msg.textContent = 'This link does not point to a SmartKnob on your local network, so it was not forwarded.';
+    return;
+  }
+
+  var forward = new URLSearchParams();
+  forward.set('spotify', '');
+  ['code', 'state', 'error'].forEach(function (k) {
+    if (params.has(k)) forward.set(k, params.get(k));
+  });
+
+  // replace() keeps the one-time code out of this page's history entry.
+  window.location.replace('http://' + host + '/?' + forward.toString().replace('spotify=', 'spotify'));
+})();
+  </script>
+</body>
+</html>
